@@ -24,7 +24,7 @@ class Node {
 
 template <class T>
 class BiTree {
-public:
+ public:
   BiTree();
   ~BiTree() { delete[] m_root; }
   void add_node(const T& val);
@@ -33,13 +33,13 @@ public:
   bool is_empty();
   void print_tree(tree_order print_order);
   int get_height(Node<T>* parent = nullptr);
-private:
+
+ private:
   Node<T>* m_root;
 };
 
 template <class T>
-BiTree<T>::BiTree() : m_root(nullptr){
-}
+BiTree<T>::BiTree() : m_root(nullptr) {}
 
 template <class T>
 void BiTree<T>::insert(const T& val, Node<T>*& parent) {
@@ -48,20 +48,20 @@ void BiTree<T>::insert(const T& val, Node<T>*& parent) {
     parent = new Node<T>(val);
     return;
   }
-  if (val == (parent)->m_data) {
+  if (val == parent->m_data) {
     cout << "data already exsit!" << endl;
     return;
-  } else if (val < (parent)->m_data) {
-    insert(val, (parent)->m_left);
+  } else if (val < parent->m_data) {
+    insert(val, parent->m_left);
   } else {
-    insert(val, (parent)->m_right);
+    insert(val, parent->m_right);
   }
   return;
 }
 
 template <class T>
 void BiTree<T>::add_node(const T& val) {
-    insert(val, m_root);
+  insert(val, m_root);
 }
 
 template <class T>
