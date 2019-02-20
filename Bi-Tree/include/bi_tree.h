@@ -34,6 +34,10 @@ class BiTree {
   void print_tree(tree_order print_order);
   int get_height(Node<T>* parent = nullptr);
 
+  void print_inorder(Node<T>* parent);
+  void print_preorder(Node<T>* parent);
+  void print_posorder(Node<T>* parent);
+
  private:
   Node<T>* m_root;
 };
@@ -95,21 +99,45 @@ int BiTree<T>::get_height(Node<T>* parent) {
 }
 
 template <class T>
+void BiTree<T>::print_inorder(Node<T>* parent) {
+  if (parent == nullptr) return;
+  print_inorder(parent->m_left);
+  cout << parent->m_data << endl;
+  print_inorder(parent->m_right);
+}
+
+template <class T>
+void BiTree<T>::print_preorder(Node<T>* parent) {
+  if (parent == nullptr) return;
+  cout << parent->m_data << endl;
+  print_preorder(parent->m_left);
+  print_preorder(parent->m_right);
+}
+
+template <class T>
+void BiTree<T>::print_posorder(Node<T>* parent) {
+  if(parent == nullptr) return;
+  print_posorder(parent->m_left);
+  print_posorder(parent->m_right);
+  cout << parent->m_data << endl;
+}
+
+template <class T>
 void BiTree<T>::print_tree(tree_order print_order) {
   switch (print_order) {
     case tree_order::PRE_ORDER:
-
-      /*do something*/
+      cout << "Print Tree Pre-Order:" << endl;
+      print_preorder(this->m_root);
       break;
 
     case tree_order::IN_ORDER:
-
-      /*do something*/
+      cout << "Print Tree In-Order:" << endl;
+      print_inorder(this->m_root);
       break;
 
     case tree_order::POS_ORDER:
-
-      /*do something*/
+      cout << "Print Tree Pos-Order:" << endl;
+      print_posorder(this->m_root);
       break;
 
     default:

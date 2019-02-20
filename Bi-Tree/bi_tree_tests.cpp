@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
   BiTree<int>* btree = new BiTree<int>();
   vector<int> a = {1, 2, 3, 4, 5};
   if (build_tree_from_array(btree, a)) {
-    btree->print_tree(tree_order::IN_ORDER);
+    btree->print_tree(tree_order::POS_ORDER);
   }
 
   return 0;
