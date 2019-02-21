@@ -1,0 +1,279 @@
+1. What is the difference between an std::atomic<> variable and variable marked volatile? 
+Answer:
+atomic variables are used for signal in between different threads.
+it's an atomic operation so when on thread access the value, it's preventind the memory getting changed by another thread.
+
+volatile is a compiler optimization preventing keyword, it forces the process to check the memory location each time when access the variable, instead of using cached value.
+
+
+From Internet:
+Volatile : Informs the compiler to avoid optimization. This keyword is used for variables that shall change unexpectedly. Volatile variables are mostly useless on modern machines with latest compilers. A volatile keyword was introduced to prevent compiler optimizations of some conditions and ensure access of all interested threads to the variable. Modern hardware may suppress and reorder certain accesses thus making use of the volatile keyword alone not safe. 
+
+Atomic : It is also used in case of multi-threaded application. However, this ensures that there is no lock/stall while using in a multi-threaded application. Atomic operations are free of races and indivisble. Few of the key scenario of usage is to check whether a lock is free or used, atomically add to the value and return the added value etc. in multi-threaded application.
+
+2. What is the difference between static_cast, reinterpret_cast, const_cast and dynamic_cast and when should they be used?
+static_cast is the most common casting keyword, it converts one type to another type.
+reinterpret_cast is pretty powerful, it maps byte by byte to destination, despite the differences.
+const_cast will prevent the value from changing when cast it.
+dynamic_cast will do it on the run time.
+
+From Internet:
+Static cast
+The static cast performs conversions between compatible types.
+It is similar to the C-style cast, but is more restrictive. 
+it will give errors if you try to cast an interger pointer to a char (4 bytes to 1 byte)
+
+Reinterpret cast
+To force the pointer conversion, in the same way as the C-style cast does in the background, the reinterpret cast would be used instead.
+This cast handles conversions between certain unrelated types, such as from one pointer type to another incompatible pointer type. It will simply perform a binary copy of the data without altering the underlying bit pattern. Note that the result of such a low-level operation is system-specific and therefore not portable. It should be used with caution if it cannot be avoided altogether.
+
+Dynamic cast
+This one is only used to convert object pointers and object references into other pointer or reference types in the inheritance hierarchy. It is the only cast that makes sure that the object pointed to can be converted, by performing a run-time check that the pointer refers to a complete object of the destination type. For this run-time check to be possible the object must be polymorphic. That is, the class must define or inherit at least one virtual function. This is because the compiler will only generate the needed run-time type information for such objects.
+
+In the example below, a MyChild pointer is converted into a MyBase pointer using a dynamic cast. This derived-to-base conversion succeeds, because the Child object includes a complete Base object.
+
+class MyBase 
+{ 
+  public:
+  virtual void test() {}
+};
+class MyChild : public MyBase {};
+
+
+
+int main()
+{
+  MyChild *child = new MyChild();
+  MyBase  *base = dynamic_cast<MyBase*>(child); // ok
+}
+
+The next example attempts to convert a MyBase pointer to a MyChild pointer. Since the Base object does not contain a complete Child object this pointer conversion will fail. To indicate this, the dynamic cast returns a null pointer. This gives a convenient way to check whether or not a conversion has succeeded during run-time.
+
+MyBase  *base = new MyBase();
+MyChild *child = dynamic_cast<MyChild*>(base);
+
+
+if (child == 0) 
+std::cout << "Null pointer returned";
+
+If a reference is converted instead of a pointer, the dynamic cast will then fail by throwing a bad_cast exception. This needs to be handled using a try-catch statement.
+
+#include <exception>
+// …  
+try
+{ 
+  MyChild &child = dynamic_cast<MyChild&>(*base);
+}
+catch(std::bad_cast &e) 
+{ 
+  std::cout << e.what(); // bad dynamic_cast
+}
+
+
+Dynamic or static cast
+
+The advantage of using a dynamic cast is that it allows the programmer to check whether or not a conversion has succeeded during run-time. The disadvantage is that there is a performance overhead associated with doing this check. For this reason using a static cast would have been preferable in the first example, because a derived-to-base conversion will never fail.
+
+MyBase *base = static_cast<MyBase*>(child); // ok
+
+However, in the second example the conversion may either succeed or fail. It will fail if the MyBase object contains a MyBase instance and it will succeed if it contains a MyChild instance. In some situations this may not be known until run-time. When this is the case dynamic cast is a better choice than static cast.
+
+// Succeeds for a MyChild object
+MyChild *child = dynamic_cast<MyChild*>(base);
+
+If the base-to-derived conversion had been performed using a static cast instead of a dynamic cast the conversion would not have failed. It would have returned a pointer that referred to an incomplete object. Dereferencing such a pointer can lead to run-time errors.
+
+Const cast
+
+This one is primarily used to add or remove the const modifier of a variable.
+
+const int myConst = 5;
+int *nonConst = const_cast<int*>(&myConst); // removes const
+
+Const cast is instead used mainly when there is a function that takes a non-constant pointer argument, even though it does not modify the pointee.
+
+void print(int *p) 
+{
+   std::cout << *p;
+}
+
+3. What is the mutable keyword used for? What are some examples of when it should be used.
+mutable keyword are used for class member in an constant class to be able to get changed and copied. 
+it's mostly useful when you have some variables that need to be changed in a constant class.
+
+
+From Internet:
+Sometimes there is requirement to modify one or more data members of class / struct through const function even though you don’t want the function to update other members of class / struct.
+
+The keyword mutable is mainly used to allow a particular data member of const object to be modified. When we declare a function as const, the this pointer passed to function becomes const. Adding mutable to a variable allows a const pointer to change members.
+mutable is particularly useful if most of the members should be constant but a few need to be updateable. Data members declared as mutable can be modified even though they are the part of object declared as const. You cannot use the mutable specifier with names declared as static or const, or reference.
+
+4. What will the following program print when executed:
+
+
+#include <iostream>
+
+const int& get_foo() {
+    static int v = 0;
+    return v;
+}       
+const int& get_bar() {
+    static const int v = 0;
+    return v;
+}
+
+
+int main(int argc, const char * argv[]) {
+    const int& foo_ref = get_foo();//foo_ref = 0;
+    const_cast<int&>(foo_ref) = 1;//remove const, foo_ref = 1
+    std::cout << "get_foo() returned: "<< get_foo() << std::endl;
+    
+    
+    const int& bar_ref = get_bar();
+    const_cast<int&>(bar_ref) = 2;
+    std::cout << "get_bar() returned: "<< get_bar() << std::endl;
+    return 0;
+}
+
+Answer:
+get_foo() returned: 1
+Segmentation fault
+
+
+
+      
+static int counter = 0;
+
+class foo {
+public:
+    foo() {
+        ++counter;
+    }
+};
+
+class bar : public foo {
+public:
+};
+
+class baz : public foo {
+public:
+};
+
+class qux : public baz, public bar {
+public:
+};
+
+int main(int argc, const char* argv[]) {
+    qux obj;
+    std::cout << counter << std::endl;
+    return 0;
+}
+Answer:
+
+static int counter = 0;
+
+class foo {
+public:
+    foo() {
+        ++counter;
+    }
+};
+
+class bar : public virtual foo {
+public:
+};
+
+class baz : public virtual foo {
+public:
+};
+
+class qux : public baz, public bar {
+public:
+};
+
+int main(int argc, const char* argv[]) {
+    qux obj;
+    std::cout << counter << std::endl;
+    return 0;
+}
+
+Diamond problem: 
+Because both bar and baz has foo allocated as common data members, the qux class will not know which foo to reference from.
+The soluction is to use virtual inherence, so that foo is only included once in the derived class. So qux can find the right foo to call the counter.
+
+7. Modify the following program so that it will compile. You may not add new functions or modify the signature of existing functions.
+
+#include <iostream>
+
+class foo {
+public:
+    void print() const {
+        initialize_message_if_needed();
+        std::cout << message << std::endl;
+    }
+
+private:
+    void initialize_message_if_needed() const {
+        if (message.empty()) {
+            message = "Hello";
+        }
+    }
+   => Mutable std::string message = "";
+};
+
+int main(int argc, const char* argv[]) {
+    foo obj;
+    obj.print();
+
+    return 0;
+}
+
+
+
+8. What is the difference between std::deque, std::vector, std::set, std::unordered_set and std::list? Give examples of when one container should be used over an another. 
+
+deque: double ended queue, can be deque/enqueue from both ends
+vector: acting like an array
+set: set is O(1) lookup time, can't have duplicated val stored
+unordered_set: same as set but without order, faster access than set 
+Unordered sets have to pay for their O(1) average access time in a few ways:
+
+    set uses less memory than unordered_set to store the same number of elements.
+    For a small number of elements, lookups in a set might be faster than lookups in an unordered_set.
+    Even though many operations are faster in the average case for unordered_set, they are often guaranteed to have better worst case complexities for set (for example insert).
+    That set sorts the elements is useful if you want to access them in order.
+    You can lexicographically compare different sets with <, <=, > and >=. unordered_sets are not required to support these operations.
+
+list: Lists are sequence containers that allow constant time insert and erase operations anywhere within the sequence, and iteration in both directions.
+
+List containers are implemented as doubly-linked lists; Doubly linked lists can store each of the elements they contain in different and unrelated storage locations. The ordering is kept internally by the association to each element of a link to the element preceding it and a link to the element following it.
+
+9. What is the difference between std::map, std::unordered_map? Give examples of when one container should be used over an another. 
+
+unordered_map has no order, so faster access.
+                  | map             | unordered_map
+---------------------------------------------------------
+Ordering        | increasing  order   | no ordering
+                | (by default)        |
+
+Implementation  | Self balancing BST  | Hash Table
+                | like Red-Black Tree |  
+
+search time     | log(n)              | O(1) -> Average 
+                |                     | O(n) -> Worst Case
+
+Insertion time  | log(n) + Rebalance  | Same as search
+                      
+Deletion time   | log(n) + Rebalance  | Same as search
+
+Use std::map when
+
+    You need ordered data.
+    You would have to print/access the data (in sorted order).
+    You need predecessor/successor of elements.
+    See advantages of BST over Hash Table for more cases.
+
+Use std::unordered_map when
+
+    You need to keep count of some data (Example – strings) and no ordering is required.
+    You need single element access i.e. no traversal.
